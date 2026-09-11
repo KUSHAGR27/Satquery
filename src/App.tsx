@@ -1038,11 +1038,13 @@ function RightSidebar({
   analysisProgress,
   onAsk,
   onHighlight,
+  onStartAnalysis,
 }: {
   workspaceState: WorkspaceState;
   analysisProgress: number;
   onAsk: (q: string) => void;
   onHighlight: (id: number) => void;
+  onStartAnalysis: () => void;
 }) {
   const [prompt, setPrompt] = useState("");
   const CHIPS = ["What changed here?", "Detect buildings", "Compare both images", "Analyze vegetation"];
@@ -1080,27 +1082,64 @@ function RightSidebar({
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-4 py-4">
         {workspaceState === "idle" && (
-          <div className="flex flex-col items-center justify-center h-full py-16 text-center">
-            <div className="w-10 h-10 rounded-xl bg-sat-surface2 border border-sat-border flex items-center justify-center mb-3 text-sat-muted">
+          <div className="flex flex-col items-center justify-center h-full py-8 text-center">
+            <div className="w-12 h-12 rounded-2xl bg-sat-surface2 border border-sat-border flex items-center justify-center mb-3 text-sat-cyan shadow-[0_0_20px_rgba(85,214,210,0.1)]">
               <Target />
             </div>
-            <p className="text-sat-muted text-[12px] leading-relaxed">
-              Ask anything about the loaded satellite imagery to begin analysis.
+            <p className="text-sat-text text-sm font-semibold mb-1">
+              Ready for Analysis
             </p>
+            <p className="text-sat-muted text-[11px] leading-relaxed max-w-[240px] mb-5">
+              2 datasets loaded (Optical + SAR). Click below to execute multi-temporal change detection.
+            </p>
+
+            <button
+              onClick={onStartAnalysis}
+              className="w-full py-2.5 px-4 rounded-xl bg-sat-cyan text-sat-bg font-semibold text-xs hover:brightness-110 shadow-[0_0_20px_rgba(85,214,210,0.3)] transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="5 3 19 12 5 21 5 3" />
+              </svg>
+              Start Analysis
+            </button>
+
+            <div className="w-full mt-6 text-left">
+              <p className="text-[10px] text-sat-muted/50 uppercase tracking-widest font-mono mb-2">
+                Suggested Queries
+              </p>
+              <div className="space-y-1.5">
+                {[
+                  "Has urban construction increased?",
+                  "Detect building changes 2024–2026",
+                  "Analyze vegetation & water zones",
+                ].map((q) => (
+                  <button
+                    key={q}
+                    onClick={() => {
+                      onAsk(q);
+                      onStartAnalysis();
+                    }}
+                    className="w-full text-left px-3 py-2 rounded-lg bg-sat-dark border border-sat-border text-[11px] text-sat-muted hover:text-sat-text hover:border-sat-cyan/40 hover:bg-sat-cyan/5 transition-all truncate cursor-pointer"
+                  >
+                    → {q}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 
         {workspaceState === "analyzing" && (
           <div className="space-y-2 fade-up">
             {/* Analyzing Top Card */}
-            <div className="flex items-center gap-3 p-3.5 rounded-xl border border-sat-cyan/20 bg-sat-cyan/5 mb-4">
+            <div className="flex items-center gap-3 p-3.5 rounded-xl border border-sat-cyan/30 bg-sat-cyan/5 shadow-[0_0_20px_rgba(85,214,210,0.06)] mb-4">
               <span className="spin-icon text-sat-cyan">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" opacity="0.8">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <path d="M21 12a9 9 0 11-6.219-8.56" />
                 </svg>
               </span>
               <div>
-                <p className="text-sat-cyan text-[12px] font-medium leading-tight">Analyzing satellite data...</p>
+                <p className="text-sat-cyan text-[12px] font-semibold leading-tight">Analyzing satellite data...</p>
                 <p className="text-sat-muted/70 text-[10px] mt-0.5">ChangeDetection_V2 · 142 km²</p>
               </div>
             </div>
@@ -1110,12 +1149,12 @@ function RightSidebar({
               return (
                 <div
                   key={i}
-                  className={`flex items-start gap-3 p-3 rounded-xl border transition-all ${
+                  className={`flex items-start gap-3 p-3 rounded-xl border transition-all duration-300 ${
                     state === "done"
                       ? "border-emerald-500/20 bg-emerald-500/5"
                       : state === "running"
-                      ? "border-sat-cyan/40 bg-sat-cyan/5 shadow-[0_0_15px_rgba(85,214,210,0.05)]"
-                      : "border-transparent opacity-40"
+                      ? "border-sat-cyan/40 bg-sat-cyan/5 shadow-[0_0_15px_rgba(85,214,210,0.08)]"
+                      : "border-transparent opacity-35"
                   }`}
                 >
                   <div className="flex-shrink-0 w-4 h-4 mt-0.5 flex items-center justify-center">
@@ -1140,15 +1179,15 @@ function RightSidebar({
                           state === "done"
                             ? "text-sat-text"
                             : state === "running"
-                            ? "text-sat-cyan"
+                            ? "text-sat-cyan font-semibold"
                             : "text-sat-muted/50"
                         }`}
                       >
                         {step.label}
                       </p>
                       {state === "done" && (
-                        <span className="text-sat-muted/30">
-                          <Check size={10} />
+                        <span className="text-emerald-400/70">
+                          <Check size={9} />
                         </span>
                       )}
                     </div>
@@ -1206,12 +1245,21 @@ function RightSidebar({
                   ))}
                 </div>
 
-                <button
-                  onClick={() => onHighlight(2)}
-                  className="w-full py-2 rounded-lg bg-sat-cyan/10 border border-sat-cyan/25 text-sat-cyan text-[11px] font-medium hover:bg-sat-cyan/20 transition-all"
-                >
-                  View evidence on map
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => onHighlight(2)}
+                    className="flex-1 py-2 rounded-lg bg-sat-cyan/10 border border-sat-cyan/25 text-sat-cyan text-[11px] font-medium hover:bg-sat-cyan/20 transition-all cursor-pointer"
+                  >
+                    View evidence on map
+                  </button>
+                  <button
+                    onClick={onStartAnalysis}
+                    className="px-3 py-2 rounded-lg border border-sat-border text-sat-muted hover:text-sat-text hover:border-sat-cyan/30 text-[11px] transition-all flex items-center gap-1 cursor-pointer"
+                    title="Re-run Analysis"
+                  >
+                    ↺ Re-run
+                  </button>
+                </div>
               </div>
 
               {/* Meta */}
@@ -1234,8 +1282,11 @@ function RightSidebar({
             {CHIPS.map((chip) => (
               <button
                 key={chip}
-                onClick={() => onAsk(chip)}
-                className="px-2.5 py-1 rounded-xl bg-sat-surface2 border border-sat-border text-sat-muted text-[10px] hover:border-sat-cyan/30 hover:text-sat-text transition-all"
+                onClick={() => {
+                  onAsk(chip);
+                  onStartAnalysis();
+                }}
+                className="px-2.5 py-1 rounded-xl bg-sat-surface2 border border-sat-border text-sat-muted text-[10px] hover:border-sat-cyan/30 hover:text-sat-text transition-all cursor-pointer"
               >
                 {chip}
               </button>
@@ -1243,10 +1294,10 @@ function RightSidebar({
           </div>
         )}
         <div className="flex items-center gap-2 bg-sat-dark border border-sat-border rounded-xl px-3 py-2.5 focus-within:border-sat-cyan/40 transition-colors">
-          <button className="text-sat-muted hover:text-sat-text transition-colors flex-shrink-0">
+          <button className="text-sat-muted hover:text-sat-text transition-colors flex-shrink-0 cursor-pointer">
             <Attach />
           </button>
-          <button className="text-sat-muted hover:text-sat-text transition-colors flex-shrink-0">
+          <button className="text-sat-muted hover:text-sat-text transition-colors flex-shrink-0 cursor-pointer">
             <Target />
           </button>
           <input
@@ -1255,6 +1306,7 @@ function RightSidebar({
             onKeyDown={(e) => {
               if (e.key === "Enter" && prompt.trim()) {
                 onAsk(prompt);
+                onStartAnalysis();
                 setPrompt("");
               }
             }}
@@ -1265,10 +1317,11 @@ function RightSidebar({
             onClick={() => {
               if (prompt.trim()) {
                 onAsk(prompt);
+                onStartAnalysis();
                 setPrompt("");
               }
             }}
-            className="text-sat-cyan hover:brightness-125 transition-all flex-shrink-0"
+            className="text-sat-cyan hover:brightness-125 transition-all flex-shrink-0 cursor-pointer"
           >
             <Send />
           </button>
@@ -1284,24 +1337,20 @@ function AuditTrail({
   workspaceState,
   analysisProgress,
   onViewEvidence,
+  onStartAnalysis,
 }: {
   workspaceState: WorkspaceState;
   analysisProgress: number;
   onViewEvidence: () => void;
+  onStartAnalysis: () => void;
 }) {
-  const [expanded, setExpanded] = useState(false);
-  const [activeStep, setActiveStep] = useState<number | null>(null);
+  const [expanded, setExpanded] = useState(true);
 
   useEffect(() => {
     if (workspaceState === "analyzing") {
       setExpanded(true);
     }
   }, [workspaceState]);
-
-  const handleViewEvidence = () => {
-    setExpanded(false);
-    onViewEvidence();
-  };
 
   const isAnalyzing = workspaceState === "analyzing";
   const isResults = workspaceState === "results";
@@ -1314,60 +1363,103 @@ function AuditTrail({
     return "waiting";
   };
 
-  const getStatusText = () => {
-    if (isResults) return "Analysis completed · 6 steps";
-    if (isAnalyzing) return "Processing...";
-    return "Ready to analyze";
-  };
+  const PIPELINE_TAGS = ["Input", "Intent", "Data", "Tool", "Analysis", "Evidence", "Answer"];
 
   return (
     <div
       className="flex-shrink-0 border-t border-sat-border bg-sat-surface transition-all duration-300 overflow-hidden"
-      style={{ height: expanded ? 400 : 52 }}
+      style={{ height: expanded ? 330 : 52 }}
     >
       {/* Always-visible header bar */}
       <div className="flex items-center gap-4 px-5 h-[52px] border-b border-sat-border">
+        {/* Left icon and title */}
         <div className="flex items-center gap-2 flex-shrink-0">
-          <div className={`w-1.5 h-1.5 rounded-full ${isAnalyzing ? "bg-sat-cyan blink-dot" : isResults ? "bg-emerald-400" : "bg-sat-border"}`} />
-          <span className="text-[10px] font-semibold text-sat-text uppercase tracking-widest">
+          <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-all ${
+            isResults
+              ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
+              : isAnalyzing
+              ? "bg-sat-cyan/20 text-sat-cyan border border-sat-cyan/40"
+              : "bg-sat-surface2 text-sat-muted border border-sat-border"
+          }`}>
+            {isResults ? (
+              <Check size={9} />
+            ) : isAnalyzing ? (
+              <div className="w-1.5 h-1.5 rounded-full bg-sat-cyan blink-dot" />
+            ) : (
+              <div className="w-1.5 h-1.5 rounded-full bg-sat-muted/40" />
+            )}
+          </div>
+          <span className="text-[11px] font-bold text-sat-text uppercase tracking-wide">
             AI Audit Trail
           </span>
         </div>
 
-        {expanded ? (
-          <p className="text-[10px] text-sat-muted/50 truncate">
-            Observable record of the analysis performed by SatQuery AI
-          </p>
-        ) : (
-          <div className="flex items-center gap-0 text-[9px] text-sat-muted/45 overflow-hidden">
-            {["Input", "Intent", "Data", "Tool", "Analysis", "Evidence", "Answer"].map((s, i) => (
-              <span key={s} className="flex items-center gap-1.5 flex-shrink-0">
-                {i > 0 && <span className="text-sat-border mx-1">→</span>}
-                <span className={isResults || (isAnalyzing && analysisProgress >= i) ? "text-sat-text font-medium" : ""}>{s}</span>
+        {/* Center: Pipeline breadcrumb tags matching user reference */}
+        <div className="hidden md:flex items-center gap-1 text-[9px] text-sat-muted/50 overflow-hidden">
+          {PIPELINE_TAGS.map((tag, i) => {
+            const isPassed = isResults || (isAnalyzing && analysisProgress >= i);
+            return (
+              <span key={tag} className="flex items-center gap-1 flex-shrink-0">
+                {i > 0 && <span className="text-sat-border/60 mx-0.5">→</span>}
+                <span className={`transition-colors px-1.5 py-0.5 rounded ${
+                  isPassed ? "text-sat-text font-semibold bg-sat-surface2/60 text-sat-cyan" : ""
+                }`}>
+                  {tag}
+                </span>
               </span>
-            ))}
-          </div>
-        )}
+            );
+          })}
+        </div>
 
+        {/* Right action controls */}
         <div className="ml-auto flex items-center gap-3 flex-shrink-0">
-          {expanded ? (
+          {isResults ? (
             <>
-              {isResults && <span className="text-[9px] text-sat-muted/40 font-mono">09:14:07 UTC</span>}
-              <span className={`text-[9px] ${isResults ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/25" : isAnalyzing ? "text-sat-cyan bg-sat-cyan/10 border-sat-cyan/25" : "text-sat-muted bg-sat-surface2 border-sat-border"} border px-2 py-0.5 rounded font-semibold uppercase tracking-wider`}>
-                {isResults ? "COMPLETED" : isAnalyzing ? "PROCESSING" : "WAITING"}
+              <span className="text-[10px] text-sat-cyan font-medium hidden sm:inline">
+                Analysis completed · 6 steps
               </span>
-              <button className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-sat-border text-sat-muted hover:text-sat-text text-[10px] transition-all">
+              <button
+                onClick={onStartAnalysis}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg border border-sat-border text-sat-muted hover:text-sat-text hover:border-sat-cyan/30 text-[10px] transition-all cursor-pointer"
+              >
+                ↺ Re-run
+              </button>
+              <button className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-sat-border text-sat-muted hover:text-sat-text text-[10px] transition-all cursor-pointer">
                 Export Audit ↓
               </button>
             </>
+          ) : isAnalyzing ? (
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-sat-cyan font-medium flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-sat-cyan blink-dot" />
+                Processing Step {Math.min(6, analysisProgress + 1)} of 6...
+              </span>
+              <span className="text-[9px] text-sat-cyan bg-sat-cyan/10 border border-sat-cyan/25 px-2 py-0.5 rounded font-semibold uppercase tracking-wider">
+                PROCESSING
+              </span>
+            </div>
           ) : (
-            <span className={`text-[10px] ${isResults ? "text-emerald-400" : isAnalyzing ? "text-sat-cyan" : "text-sat-muted"}`}>{getStatusText()}</span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={onStartAnalysis}
+                className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-sat-cyan text-sat-bg hover:brightness-110 shadow-[0_0_12px_rgba(85,214,210,0.3)] text-[10px] font-semibold transition-all cursor-pointer"
+              >
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="5 3 19 12 5 21 5 3" />
+                </svg>
+                Start Analysis
+              </button>
+              <span className="text-[9px] text-sat-muted bg-sat-surface2 border border-sat-border px-2 py-0.5 rounded font-semibold uppercase tracking-wider">
+                WAITING
+              </span>
+            </div>
           )}
+
           <button
             onClick={() => setExpanded(!expanded)}
-            className="flex items-center gap-1.5 px-3 py-1 rounded-lg border border-sat-border text-sat-muted hover:text-sat-text hover:border-sat-cyan/30 text-[10px] transition-all"
+            className="flex items-center gap-1 px-3 py-1 rounded-lg border border-sat-border text-sat-muted hover:text-sat-text hover:border-sat-cyan/30 text-[10px] transition-all cursor-pointer"
           >
-            {expanded ? "Collapse" : "View Full Audit Trail"}
+            {expanded ? "Close" : "View Full Audit Trail"}
             <ChevDown up={expanded} />
           </button>
         </div>
@@ -1375,13 +1467,19 @@ function AuditTrail({
 
       {/* Expanded horizontal timeline */}
       {expanded && (
-        <div className="overflow-x-auto px-6 py-5 pb-8 relative custom-scrollbar" style={{ height: 260 }}>
+        <div className="overflow-x-auto px-6 py-4 pb-6 relative custom-scrollbar" style={{ height: 275 }}>
           {/* Connecting Line background */}
-          <div className="absolute top-[31px] left-10 right-10 h-0.5 bg-sat-border" />
-          {/* Active Line (animated) */}
+          <div className="absolute top-[27px] left-12 right-12 h-[2px] bg-sat-border/80" />
+          {/* Active Line (animated smoothly) */}
           <div 
-            className="absolute top-[31px] left-10 h-0.5 bg-sat-cyan transition-all duration-700 ease-in-out" 
-            style={{ width: `calc(${Math.max(0, Math.min(5, analysisProgress)) / 5} * (100% - 5rem))` }}
+            className="absolute top-[27px] left-12 h-[2px] bg-sat-cyan transition-all duration-700 ease-out" 
+            style={{
+              width: isResults
+                ? "calc(100% - 6rem)"
+                : analysisProgress >= 0
+                ? `calc(${(Math.min(5, analysisProgress) / 5)} * (100% - 6rem))`
+                : "0%",
+            }}
           />
 
           <div className="flex gap-4 relative z-10 w-max min-w-full justify-between">
@@ -1392,40 +1490,74 @@ function AuditTrail({
               const isWaiting = status === "waiting";
               
               return (
-                <div key={event.id} className="flex flex-col gap-3 w-[260px] flex-shrink-0">
+                <div key={event.id} className="flex flex-col gap-2.5 w-[250px] flex-shrink-0">
                   {/* Node */}
                   <div className="h-6 flex items-center justify-center">
-                    <div className={`w-3 h-3 rounded-full border-[1.5px] transition-all z-10 ${
-                      isDone ? "bg-sat-cyan border-sat-cyan shadow-[0_0_8px_rgba(85,214,210,0.5)]" 
-                      : isProcessing ? "bg-sat-bg border-sat-cyan shadow-[0_0_8px_rgba(85,214,210,0.5)]" 
-                      : "bg-sat-bg border-sat-border"
+                    <div className={`w-3.5 h-3.5 rounded-full border-[2px] transition-all duration-500 z-10 flex items-center justify-center ${
+                      isDone
+                        ? "bg-sat-cyan border-sat-cyan shadow-[0_0_10px_rgba(85,214,210,0.6)]" 
+                        : isProcessing
+                        ? "bg-sat-bg border-sat-cyan shadow-[0_0_10px_rgba(85,214,210,0.6)]" 
+                        : "bg-sat-bg border-sat-border"
                     }`}>
-                      {isProcessing && <div className="w-1.5 h-1.5 m-auto mt-[1.5px] rounded-full bg-sat-cyan blink-dot" />}
+                      {isDone && <div className="w-1 h-1 rounded-full bg-sat-bg" />}
+                      {isProcessing && <div className="w-1.5 h-1.5 rounded-full bg-sat-cyan blink-dot" />}
                     </div>
                   </div>
 
-                  {/* Card */}
-                  <div className={`flex flex-col h-[150px] rounded-xl border px-4 py-3.5 transition-all ${
-                    isWaiting ? "border-sat-border bg-sat-surface2/40 opacity-50"
-                    : isProcessing ? "border-sat-cyan/40 bg-sat-cyan/5 shadow-[0_0_15px_rgba(85,214,210,0.05)]"
-                    : "border-sat-border bg-sat-dark"
+                  {/* Card with Pill Tag matching mockup */}
+                  <div className={`flex flex-col h-[180px] rounded-xl border p-4 transition-all duration-300 ${
+                    isWaiting
+                      ? "border-sat-border bg-sat-surface2/30 opacity-60"
+                      : isProcessing
+                      ? "border-sat-cyan/50 bg-sat-cyan/5 shadow-[0_0_20px_rgba(85,214,210,0.08)]"
+                      : "border-sat-border bg-sat-dark"
                   }`}>
                     {/* Card Header */}
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-[10px] text-sat-muted/60 font-mono tracking-widest font-semibold">
+                      <span className={`text-[10px] font-mono tracking-widest font-semibold ${
+                        isDone || isProcessing ? "text-sat-cyan" : "text-sat-muted/60"
+                      }`}>
                         {event.step}
                       </span>
-                      {isDone && <span className="text-emerald-400"><Check size={11} /></span>}
-                      {isProcessing && <span className="text-sat-cyan spin-icon"><SpinSvg /></span>}
+                      {isDone && (
+                        <div className="w-4 h-4 rounded-full border border-emerald-400 flex items-center justify-center text-emerald-400">
+                          <Check size={8} />
+                        </div>
+                      )}
+                      {isProcessing && (
+                        <span className="text-sat-cyan spin-icon">
+                          <SpinSvg />
+                        </span>
+                      )}
                     </div>
 
-                    {/* Content */}
-                    <p className={`text-[13px] font-semibold mb-1.5 ${isWaiting ? "text-sat-muted/50" : "text-sat-text"}`}>
+                    {/* Title */}
+                    <p className={`text-[13px] font-semibold mb-1.5 leading-snug ${isWaiting ? "text-sat-muted/70" : "text-sat-text"}`}>
                       {event.title}
                     </p>
-                    <p className={`text-[10px] leading-relaxed line-clamp-2 ${isWaiting ? "text-sat-muted/30" : "text-sat-muted/80"}`}>
+
+                    {/* Description */}
+                    <p className={`text-[10px] leading-relaxed line-clamp-2 ${isWaiting ? "text-sat-muted/40" : "text-sat-muted/80"}`}>
                       {event.description}
                     </p>
+
+                    {/* Tag Pill aligned to bottom — matches image 1 reference */}
+                    <div className="mt-auto pt-3">
+                      {event.tag && (
+                        <div
+                          className={`inline-block text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md border transition-all ${
+                            event.tag === "CHANGE DETECTION" || event.tag === "TOOL SELECTED"
+                              ? "text-sat-cyan border-sat-cyan/35 bg-sat-cyan/10"
+                              : event.tag === "EVIDENCE GENERATED"
+                              ? "text-amber-400 border-amber-400/35 bg-amber-500/10"
+                              : "text-emerald-400 border-emerald-400/35 bg-emerald-500/10"
+                          } ${isWaiting ? "opacity-35" : "opacity-100"}`}
+                        >
+                          {event.tag}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
@@ -1438,9 +1570,17 @@ function AuditTrail({
 }
 
 // ─── WorkspaceScreen ──────────────────────────────────────────────────────────
-function WorkspaceScreen() {
-  const [workspaceState, setWorkspaceState] = useState<WorkspaceState>("idle");
-  const [analysisProgress, setAnalysisProgress] = useState(-1);
+function WorkspaceScreen({
+  initialState = "idle",
+  onBackToUpload,
+}: {
+  initialState?: WorkspaceState;
+  onBackToUpload?: () => void;
+}) {
+  const [workspaceState, setWorkspaceState] = useState<WorkspaceState>(initialState);
+  const [analysisProgress, setAnalysisProgress] = useState(
+    initialState === "analyzing" ? 0 : initialState === "results" ? 6 : -1
+  );
   const [mapMode, setMapMode] = useState<MapMode>("difference");
   const [sensorMode, setSensorMode] = useState<SensorMode>("optical");
   const [sliderPos, setSliderPos] = useState(50);
@@ -1462,6 +1602,11 @@ function WorkspaceScreen() {
   const setOpacity = (k: string, v: number) =>
     setOpacities((prev) => ({ ...prev, [k]: v }));
 
+  const startAnalysis = () => {
+    setWorkspaceState("analyzing");
+    setAnalysisProgress(0);
+  };
+
   useEffect(() => {
     if (workspaceState !== "analyzing") return;
     setAnalysisProgress(0);
@@ -1480,9 +1625,7 @@ function WorkspaceScreen() {
   }, [workspaceState]);
 
   const handleAsk = (_q: string) => {
-    if (workspaceState !== "analyzing") {
-      setWorkspaceState("analyzing");
-    }
+    startAnalysis();
   };
 
   const handleHighlight = (id: number) => {
@@ -1518,12 +1661,14 @@ function WorkspaceScreen() {
             analysisProgress={analysisProgress}
             onAsk={handleAsk}
             onHighlight={handleHighlight}
+            onStartAnalysis={startAnalysis}
           />
         </div>
         <AuditTrail
           workspaceState={workspaceState}
           analysisProgress={analysisProgress}
           onViewEvidence={() => setSelectedZone(null)}
+          onStartAnalysis={startAnalysis}
         />
       </div>
     </div>
@@ -1533,14 +1678,24 @@ function WorkspaceScreen() {
 // ─── App ──────────────────────────────────────────────────────────────────────
 export default function App() {
   const [screen, setScreen] = useState<Screen>("upload");
+  const [initialWorkspaceState, setInitialWorkspaceState] = useState<WorkspaceState>("idle");
+
+  const handleStartAnalysis = () => {
+    setInitialWorkspaceState("analyzing");
+    setScreen("workspace");
+  };
 
   return (
     <div className="h-full bg-sat-bg text-sat-text" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
       {screen === "upload" ? (
-        <UploadScreen onStart={() => setScreen("workspace")} />
+        <UploadScreen onStart={handleStartAnalysis} />
       ) : (
-        <WorkspaceScreen />
+        <WorkspaceScreen
+          initialState={initialWorkspaceState}
+          onBackToUpload={() => setScreen("upload")}
+        />
       )}
     </div>
   );
 }
+
