@@ -1,0 +1,10 @@
+{
+  "description": "Easily create and manage music festival landing pages featuring lineup schedules, ticket options, and interactive venue maps for event organizers.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
